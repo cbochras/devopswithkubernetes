@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-dep
+  namespace: project
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: project
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+      labels:
+        app: project
+    spec:
+      initContainers:  
+      - name: check-db-ready
+        image: postgres:10-alpine
+        envFrom:
+        - secretRef:
+            name: postgres-pw-url
+        # check if DB is ready, and only continue when true 
+        # 'pg_isready' uses the default environment variables of postgres
+        command: ['sh', '-c',  'until pg_isready;  do echo waiting for database; sleep 2; done;']
+      containers:
+      - envFrom:
+        - secretRef:
+            name: postgres-pw-url
+        image: movd/devopswithkubernetes-project-backend:v2.0.0
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /api/healthz?liveness
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 60
+        name: project-backend
+        readinessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /api/healthz?readiness
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 125m
+            memory: 128Mi
+      - image: movd/devopswithkubernetes-project-frontend:v1.4.0
+        name: project-frontend
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 125m
+            memory: 128Mi
+---

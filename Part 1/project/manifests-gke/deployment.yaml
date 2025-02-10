@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-dep
+  namespace: project
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: project
+  template:
+    metadata:
+      labels:
+        app: project
+        foo: bar
+    spec:
+      # Removed PV and PVC since it's okay to just download a picture everytime a pods starts
+      # volumes:
+      #   - name: project-volume
+      #     persistentVolumeClaim:
+      #       claimName: project-claim
+      # initContainers:
+      #   - name: volume-mount-hack
+      #     image: alpine
+      #     command: ["sh", "-c", "chown -R 1000:1000 /app/build/public"] # Ref: <https://serverfault.com/a/907160>
+      #     # volumeMounts:
+      #     #   - name: project-volume
+      #     #     mountPath: /app/build/public
+      containers:
+        - name: project-backend
+          image: PROJECT_BACKEND_IMAGE
+          envFrom:
+            - secretRef:
+                name: postgres-pw-url
+            - configMapRef:
+                name: nats-config
+          readinessProbe:
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            periodSeconds: 5
+            failureThreshold: 5
+            successThreshold: 1
+            httpGet:
+              path: /api/healthz?readiness
+              port: 3000
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 60 # every 60 seconds
+            failureThreshold: 10
+            httpGet:
+              path: /api/healthz?liveness
+              port: 3000
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "125m"
+          # volumeMounts:
+          #   - name: project-volume
+          #     mountPath: /app/build/public
+        - name: project-frontend
+          image: PROJECT_FRONTEND_IMAGE
+          readinessProbe:
+            initialDelaySeconds: 1
+            timeoutSeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            httpGet:
+              path: /
+              port: 80
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "125m"

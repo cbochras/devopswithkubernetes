@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-project-svc
+  namespace: project
+spec:
+  type: ClusterIP
+  selector:
+    # Note to self: select via label!
+    app: postgres-project
+  ports:
+    - name: db
+      port: 5432
+      protocol: TCP
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-project-stateful
+  namespace: project
+spec:
+  selector:
+    matchLabels:
+      app: postgres-project
+  serviceName: postgres-project
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+      labels:
+        app: postgres-project
+    spec:
+      containers:
+      - env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        envFrom:
+        - secretRef:
+            name: postgres-pw-url
+        image: postgres:10-alpine
+        name: db
+        ports:
+        - containerPort: 5432
+          name: db
+        resources:
+          limits:
+            cpu: 125m
+            memory: 128Mi
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data/
+          name: postgres-project-data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-project-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+---
