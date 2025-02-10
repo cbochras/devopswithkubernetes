@@ -1,0 +1,21 @@
+$ kubectl apply -f pingpong/manifests/
+deployment.apps/pingpong-dep created
+ingress.extensions/pingpong-ingress created
+sealedsecret.bitnami.com/postgres-pw created
+service/pingpong-svc created
+service/postgres-pingpong-svc created
+configmap/postgres-pingpong-seed created
+statefulset.apps/postgres-pingpong-stateful created
+$ curl -s http://localhost:8081/pingpong
+{"counter":4}%
+$ kubectl logs -f pingpong-dep-6bcb74f875-w5r72 pingpong
+
+> pingpong@1.0.0 start /app
+> node server.js
+
+Writing to txt is disabled
+NEVER log a db password to stdin: 'passw0rd'
+Server started on: 3000
+added a new ping to db
+added a new ping to db
+added a new ping to db

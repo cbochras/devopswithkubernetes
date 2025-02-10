@@ -1,0 +1,10 @@
+$ kubectl apply -f project/manifests/
+deployment.apps/project-dep created
+ingress.extensions/project-ingress-frontend created
+ingress.extensions/project-ingress-api-static created
+persistentvolume/project-pv created
+persistentvolumeclaim/project-claim created
+secret/postgres-pw-url created
+service/project-svc created
+service/postgres-project-svc created
+statefulset.apps/postgres-project-stateful created

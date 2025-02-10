@@ -1,0 +1,12 @@
+$ kubectl apply -f project/manifests/
+deployment.apps/project-dep created
+ingress.extensions/project-ingress-frontend created
+ingress.extensions/project-ingress-api-static created
+# ...just like in the exercise before
+
+Grafana dashboard:
+
+$ kubectl port-forward prometheus-operator-1595404775-grafana-7964b4fb7d-4hflq 3000
+Forwarding from 127.0.0.1:3000 -> 3000
+Forwarding from [::1]:3000 -> 3000
+Handling connection for 3000

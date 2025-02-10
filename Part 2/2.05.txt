@@ -1,0 +1,13 @@
+$ kubectl config set-context --current --namespace=hashgenerator
+# Create ConfigMap from `hashgenerator-env-file.properties`
+$ cat hashgeneratormanifestshashgenerator-env-file.properties
+SERVER_PORT=3001
+GENERATOR_PORT=3002
+HASHGENERATOR_URL=httphashgenerator-svc2345
+PINGPONG_URL=httppingpong-svc.pingpong6789pingpong
+MESSAGE=Hello%
+$ kubectl create configmap hashgenerator-config-env-file --from-env-file hashgeneratormanifestshashgenerator-env-file.properties
+configmaphashgenerator-config-env-file created
+# It's live
+$ curl -s httplocalhost8081
+Hellobr 2020-07-17T172559.300Z 14c4d2ff-25f2-4b45-86b8-4b7e3b80b435br 13
