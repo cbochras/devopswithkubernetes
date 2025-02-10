@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pingpong-dep
+  namespace: pingpong
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pingpong
+  template:
+    metadata:
+      labels:
+        app: pingpong
+    spec:
+      containers:
+        - name: pingpong
+          image: movd/devopswithkubernetes-pingpong:sha-746a640
+          env:
+            - name: POSTGRES_HOST
+              value: "postgres-pingpong-svc"
+          envFrom:
+            - secretRef:
+                name: postgres-pw
+          readinessProbe:
+            initialDelaySeconds: 0
+            timeoutSeconds: 3
+            periodSeconds: 5
+            successThreshold: 1
+            httpGet:
+              path: /healthz
+              port: 3000
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "125m"
